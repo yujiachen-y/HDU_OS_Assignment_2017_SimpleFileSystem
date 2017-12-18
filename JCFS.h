@@ -1,5 +1,5 @@
-#define DEBUG_INFO
-#define DEBUG_SAVEFILE
+//#define DEBUG_INFO
+//#define DEBUG_DONT_SAVEFILE
 
 #define FREE 0
 #define DIRLEN 80
@@ -54,19 +54,21 @@ typedef struct BLOCK0 {
 int my_write(int fd);
 int my_open(char *filename);
 int my_create(char *filename);
-int my_read(int fd, int len);
+int my_read(int fd);
 int do_read(int fd, unsigned char *text, int len);
 // 直接针对fat内存块进行写入，属于do_read的子函数
 int fat_write(unsigned short id, unsigned char * text, int blockoffset, int len);
 // 对fd指向的打开文件的文件指针处填上text中len长度的字节，只会改变打开文件的fcb信息，而不会改变打开文件的文件指针信息
 int do_write(int fd, unsigned char *text, int len);
+void my_reload(int fd);
 // 创建一个文件，然后再由my_mkdir和my_creat继续处理
-int my_touch(char * filename);
+int my_touch(char * filename, int attribute, int *rpafd);
 
 void my_ls();
 void startsys();
 void my_format();
 void my_exitsys();
+void my_save(int fd);
 void my_close(int fd);
 void my_cd(char *dirname);
 void my_rm(char *filename);

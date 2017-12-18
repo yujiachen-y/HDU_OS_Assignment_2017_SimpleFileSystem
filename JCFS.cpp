@@ -25,6 +25,8 @@ unsigned char *blockaddr[BLOCKNUM];
 block0 initblock;
 fat fat1[BLOCKNUM], fat2[BLOCKNUM];
 
+char str[SIZE];
+
 int main() {
   int fd;
   char command[DIRLEN << 1];
@@ -85,6 +87,11 @@ int main() {
     else if (!strcmp(command, "write")) {
       scanf("%d", &fd);
       my_write(fd);
+    }
+    else if (!strcmp(command, "sf")) {
+      for (int i = 0; i < MAXOPENFILE; ++i) {
+        if (openfilelist[i].topenfile) printf("  %d : %s\n", i, openfilelist[i].dir);
+      }
     }
     else {
       printf("command %s : no such command\n", command);
@@ -471,60 +478,6 @@ void getPos(int *id, int *offset, unsigned short first, int length) {
   }
 }
 
-int moveNextDir(int fd, char *dirname) {
-  useropen *file = &openfilelist[fd];
-  
-  // 从磁盘中读出当前目录的信息
-  unsigned char *buf = (unsigned char*)malloc(SIZE);
-  int read_size = read_ls(fd, buf, file->open_fcb.length);
-  if (read_size == -1) {
-    free(buf);
-    SAYERROR;
-    printf("moveNextDir: read_ls error\n");
-    return 0;
-  }
-  fcb dirfcb;
-  int flag = -1;
-  for (int i = 0; i < read_size; i += sizeof fcb) {
-    memcpy(&dirfcb, buf + i, sizeof fcb);
-    if (dirfcb.free) continue;
-    if (!strcmp(dirfcb.filename, dirname)) {
-      flag = i;
-      break;
-    }
-  }
-
-  free(buf);
-
-  // 没有找到需要的文件
-  if (flag == -1) return 0;
-
-  // 找到的话就开始计算相关信息，改变对应打开文件项的值
-  getPos(&file->dirno, &file->diroff, file->open_fcb.first, flag);
-  file->fcbstate = 0;
-  file->topenfile = 1;
-  memcpy(&file->open_fcb, &dirfcb, sizeof fcb);
-  file->count = dirfcb.length;
-
-  // 如果是到当前目录，目录名不变
-  if (!strcmp(dirname, ".")) {
-    ;
-  }
-  // 如果是到上一级目录，当前目录是根目录的话就不变，否则弹一个路径
-  else if (!strcmp(dirname, "..")) {
-    if (strcmp(file->dir, "~/")) {
-      popLastDir(file->dir);
-    }
-  }
-  // 其它情况一律在当前路径后面加上文件或路径名
-  else {
-    strcat(file->dir, dirfcb.filename);
-    // 如果打开的是一个路径，就在路径名后面加上"/"
-    if (!file->open_fcb.attribute) strcat(file->dir, "/");
-  }
-  return 1;
-}
-
 int getFcb(fcb* fcbp, int *dirno, int *diroff, int fd, const char *dir) {
   if (fd == -1) {
     memcpy(fcbp, blockaddr[5], sizeof fcb);
@@ -536,7 +489,7 @@ int getFcb(fcb* fcbp, int *dirno, int *diroff, int fd, const char *dir) {
   useropen *file = &openfilelist[fd];
 
   // 从磁盘中读出当前目录的信息
-  unsigned char buf[DIRLEN];
+  unsigned char *buf = (unsigned char *)malloc(SIZE);
   int read_size = read_ls(fd, buf, file->open_fcb.length);
   if (read_size == -1) {
     SAYERROR;
@@ -553,6 +506,8 @@ int getFcb(fcb* fcbp, int *dirno, int *diroff, int fd, const char *dir) {
       break;
     }
   }
+
+  free(buf);
 
   // 没有找到需要的文件
   if (flag == -1) return -1;
@@ -599,8 +554,19 @@ int getOpenlist(int fd, const char *org_dir) {
     ret = getFcb(&file->open_fcb, &file->dirno, &file->diroff, fd, org_dir);
   }
   strcpy(file->dir, dir);
+  file->fcbstate = 0;
+  file->topenfile = 1;
 
-  if (ret == -1) return -1;
+  //如果打开的是一个文件夹，就在路径后面加上'/'
+  if (!file->open_fcb.attribute) {
+    int len = strlen(file->dir);
+    if (file->dir[len-1] != '/') strcat(file->dir, "/");
+  }
+
+  if (ret == -1) {
+    file->topenfile = 0;
+    return -1;
+  }
   return fileid;
 }
 
@@ -609,11 +575,11 @@ int my_open(char *filename) {
   char newdir[DIRLEN];
   strcpy(newdir, openfilelist[curdirid].dir);
   strcat(newdir, filename);
-  int count = spiltDir(dirs, filename);
+  int count = spiltDir(dirs, newdir);
 
   char realdirs[DIRLEN][DIRLEN];
   int tot = 0;
-  for (int i = 0; i < count; ++i) {
+  for (int i = 1; i < count; ++i) {
     if (!strcmp(dirs[i], ".")) continue;
     if (!strcmp(dirs[i], "..")) {
       if (tot) --tot;
@@ -627,12 +593,14 @@ int my_open(char *filename) {
 
   // 利用当前目录的副本不断找到下一个目录
   int flag = 0;
-  for (int i = 0; i < count; ++i) {
-    fd = getOpenlist(fd, dirs[i]);
-    if (fd == -1) {
+  for (int i = 0; i < tot; ++i) {
+    int newfd = getOpenlist(fd, realdirs[i]);
+    if (newfd == -1) {
       flag = 1;
       break;
     }
+    my_close(fd);
+    fd = newfd;
   }
   if (flag) {
     printf("my_open: %s no such file or directory\n", filename);
@@ -901,7 +869,6 @@ int my_write(int fd) {
 
   int ret = 0;
   int tmp;
-  char str[SIZE];
   while (gets_s(str)) {
     int len = strlen(str);
     str[len] = '\n';
