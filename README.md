@@ -26,4 +26,4 @@
 
 见下图，感觉自己的测试数据已经够乱来和暴力了 = =
 
-![readme_pic\run_result_1.png](readme_pic\run_result_1.png)
+![run_result_1.png](readme_pic/run_result_1.png)
