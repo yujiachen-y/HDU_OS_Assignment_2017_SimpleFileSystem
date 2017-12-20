@@ -762,6 +762,11 @@ void my_rmdir(char *dirname) {
       my_close(fd);
       return;
     }
+    if (!strcmp(openfilelist[fd].dir, openfilelist[curdirid].dir)) {
+      printf("my_rmdir: can not remove the current directory!\n");
+      my_close(fd);
+      return;
+    }
 
     // 从磁盘中读出当前目录的信息
     int cnt = 0;
