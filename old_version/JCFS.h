@@ -7,12 +7,12 @@
 #define SIZE 1024000
 #define BLOCKNUM 1000
 #define BLOCKSIZE 1024
-#define ROOTBLOCKNUM 2
 #define MAXOPENFILE 10
+#define ROOTBLOCKNUM 2
 
+#define SAYERROR printf("ERROR: ")
 #define max(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define min(X, Y) (((X) < (Y)) ? (X) : (Y))
-#define SAYERROR printf("ERROR: ")
 
 // #define GRN   "\x1B[32m"
 #define GRN   "dir:"

@@ -93,6 +93,10 @@ int main() {
         if (openfilelist[i].topenfile) printf("  %d : %s\n", i, openfilelist[i].dir);
       }
     }
+    else if (!strcmp(command, "format")) {
+      scanf("%s", command);
+      my_format();
+    }
     else {
       printf("command %s : no such command\n", command);
     }
@@ -204,7 +208,7 @@ void startsys() {
   useropen_init(&openfilelist[curdirid], 5, 0, "~/");
 }
 
-int fat_read(int id, unsigned char *text, int offset, int len) {
+int fat_read(unsigned short id, unsigned char *text, int offset, int len) {
   int ret = 0;
   unsigned char *buf = (unsigned char*)malloc(BLOCKSIZE);
   
