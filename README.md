@@ -8,6 +8,14 @@
 
 **如果有疑问（特别是发现了代码的bug！），欢迎给我发邮件（yjc567@foxmail.com），或者直接在此repo中添加issue。**
 
+如果你使用的是Linux系统，请把代码第8行的`#define OS_WINDOWS`改为`#define OS_LINUX`，这样文件夹在终端中会显示为绿色。如图:
+
+![linux_result.png](old_version/readme_pic/linux_result.png)
+
+否则只有一个`dir`的提示符提示这个是一个目录文件夹。如图：
+
+![windows_result.png](old_version/readme_pic/windows_result.png)
+
 ## TODO：
 
 以后可以改进的地方

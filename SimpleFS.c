@@ -5,6 +5,11 @@
 #include <malloc.h>
 #include <string.h>
 
+#define OS_WINDOWS
+
+// 这里可以修改使用者的用户名
+const char USERNAME[] = "jiachen";
+
 #define FREE 0
 #define DIRLEN 80
 #define END 65535
@@ -18,9 +23,15 @@
 #define max(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define min(X, Y) (((X) < (Y)) ? (X) : (Y))
 
+#ifdef OS_WINDOWS
+#define GRN   "dir:"
+#define RESET ""
+#endif //OS_WINDOWS
+
+#ifdef OS_LINUX
 #define GRN   "\x1B[32m"
-// #define GRN   "dir:"
 #define RESET "\x1B[0m"
+#endif //OS_LINUX
 
 typedef struct FAT {
   unsigned short id;
@@ -57,8 +68,6 @@ typedef struct BLOCK0 {
 
 // utils
 // 这里是一些基础的函数，都是一些会重复利用的操作
-// 重载的字符串比较函数
-int strcmp(const char* a, const char *b, int len);
 // 根据所给的参数对fcb进行初始化
 void fcb_init(fcb *new_fcb, const char* filename, unsigned short first, unsigned char attribute);
 // 根据所给的参数对一个打开文件项进行初始化
@@ -141,9 +150,6 @@ void my_save(int fd);
 void my_close(int fd);
 // 利用my_open把当前目录切换到指定目录下
 void my_cd(char *dirname);
-
-// 这里可以修改使用者的用户名
-const char USERNAME[] = "jiachen";
 
 unsigned char *myvhard;
 useropen openfilelist[MAXOPENFILE];
@@ -238,14 +244,6 @@ int main() {
 }
 
 // utils
-// 这里是一些基础的函数，都是一些会重复利用的操作
-int strcmp(const char* a, const char *b, int len) {
-  for (int i = 0; i < len; ++i) if (a[i] != b[i]) {
-    if (a[i] < b[i]) return -1;
-    else return 1;
-  }
-  return 0;
-}
 
 void fcb_init(fcb *new_fcb, const char* filename, unsigned short first, unsigned char attribute) {
   strcpy(new_fcb->filename, filename);
