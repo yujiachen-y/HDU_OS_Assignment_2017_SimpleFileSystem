@@ -8,7 +8,7 @@
 
 **如果有疑问（特别是发现了代码的bug！），欢迎给我发邮件（yjc567@foxmail.com），或者直接在此repo中添加issue。**
 
-如果你使用的是Linux系统，请把代码第8行的`#define OS_WINDOWS`改为`#define OS_LINUX`，这样文件夹在终端中会显示为绿色。如图:
+如果你使用的是Linux系统，请把代码第8行的`#define OS_WINDOWS`改为`#define OS_LINUX`，这样文件夹在终端中会显示为绿色（其实你可以给各种字段加上各种颜色，但是我累了，改不动了，如果有人想改还希望fork一下）。如图:
 
 ![linux_result.png](old_version/readme_pic/linux_result.png)
 
